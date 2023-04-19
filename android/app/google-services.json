@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "51236179516",
+    "project_id": "elaf-9df7c",
+    "storage_bucket": "elaf-9df7c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51236179516:android:189a39d3c31d7b8babfd39",
+        "android_client_info": {
+          "package_name": "com.example.elaf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "51236179516-r92lpgpvfo8fh53t46cdjku4o1o56iat.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgePtHpf54xvNThnzZjvVj9xVyMVr_lik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51236179516-r92lpgpvfo8fh53t46cdjku4o1o56iat.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
