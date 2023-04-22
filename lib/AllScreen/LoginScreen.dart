@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:elaf/AllScreen/RegistrationScreen.dart';
+import 'package:elaf/AllWidgets/ProgressDialog.dart';
 import 'package:elaf/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -29,10 +30,10 @@ class LoginScreen extends StatelessWidget {
               ),
               Center(
                   child: Image(
-                image: AssetImage('images/taxi_logo.png'),
-                width: 250.0,
-                height: 250.0,
-              )),
+                    image: AssetImage('images/taxi_logo.png'),
+                    width: 250.0,
+                    height: 250.0,
+                  )),
               SizedBox(
                 height: 15.0,
               ),
@@ -55,7 +56,7 @@ class LoginScreen extends StatelessWidget {
                         labelText: "Email",
                         labelStyle: TextStyle(fontSize: 14.0),
                         hintStyle:
-                            TextStyle(color: Colors.grey, fontSize: 10.0),
+                        TextStyle(color: Colors.grey, fontSize: 10.0),
                       ),
                       style: TextStyle(fontSize: 14.0),
                     ),
@@ -70,7 +71,7 @@ class LoginScreen extends StatelessWidget {
                         labelText: "Password",
                         labelStyle: TextStyle(fontSize: 14.0),
                         hintStyle:
-                            TextStyle(color: Colors.grey, fontSize: 10.0),
+                        TextStyle(color: Colors.grey, fontSize: 10.0),
                       ),
                       style: TextStyle(fontSize: 14.0),
                     ),
@@ -120,27 +121,36 @@ class LoginScreen extends StatelessWidget {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   void loginAuthUser(BuildContext context) async {
+    showDialog(context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return ProgressDialog(message: "Authentication Process.....");
+        }
+    );
     final User? user = (await _firebaseAuth
-            .signInWithEmailAndPassword(
-                email: emailtec.text, password: passowrdtec.text)
-            .catchError((errMSG) {
+        .signInWithEmailAndPassword(
+        email: emailtec.text, password: passowrdtec.text)
+        .catchError((errMSG) {
+      Navigator.pop(context);
       displayToastMessage("Error: $errMSG", context);
     }))
         .user;
 
     if (user != null) {
       userRef.child(user.uid).once().then((event) {
-            if (event.snapshot.value != null) {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, MainScreen.main, (route) => false);
-              displayToastMessage("Logged In Now", context);
-            } else {
-              _firebaseAuth.signOut();
-              print("No User Exists");
-              displayToastMessage("Error: the user dosent exixts", context);
-            }
-          });
+        if (event.snapshot.value != null) {
+          Navigator.pushNamedAndRemoveUntil(
+              context, MainScreen.main, (route) => false);
+          displayToastMessage("Logged In Now", context);
+        } else {
+          Navigator.pop(context);
+          _firebaseAuth.signOut();
+          print("No User Exists");
+          displayToastMessage("Error: the user dosent exixts", context);
+        }
+      });
     } else {
+      Navigator.pop(context);
       displayToastMessage("Error Occured cannot be Signed in", context);
     }
   }

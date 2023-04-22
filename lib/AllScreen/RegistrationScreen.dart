@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../AllWidgets/ProgressDialog.dart';
+
 class RegistrationScreen extends StatelessWidget {
   static const String register = "register";
   TextEditingController nametec = TextEditingController();
@@ -28,10 +30,10 @@ class RegistrationScreen extends StatelessWidget {
               ),
               Center(
                   child: Image(
-                image: AssetImage('images/taxi_logo.png'),
-                width: 250.0,
-                height: 250.0,
-              )),
+                    image: AssetImage('images/taxi_logo.png'),
+                    width: 250.0,
+                    height: 250.0,
+                  )),
               SizedBox(
                 height: 15.0,
               ),
@@ -54,7 +56,7 @@ class RegistrationScreen extends StatelessWidget {
                         labelText: "Name",
                         labelStyle: TextStyle(fontSize: 14.0),
                         hintStyle:
-                            TextStyle(color: Colors.grey, fontSize: 10.0),
+                        TextStyle(color: Colors.grey, fontSize: 10.0),
                       ),
                       style: TextStyle(fontSize: 14.0),
                     ),
@@ -68,7 +70,7 @@ class RegistrationScreen extends StatelessWidget {
                         labelText: "Email",
                         labelStyle: TextStyle(fontSize: 14.0),
                         hintStyle:
-                            TextStyle(color: Colors.grey, fontSize: 10.0),
+                        TextStyle(color: Colors.grey, fontSize: 10.0),
                       ),
                       style: TextStyle(fontSize: 14.0),
                     ),
@@ -82,7 +84,7 @@ class RegistrationScreen extends StatelessWidget {
                         labelText: "Phone",
                         labelStyle: TextStyle(fontSize: 14.0),
                         hintStyle:
-                            TextStyle(color: Colors.grey, fontSize: 10.0),
+                        TextStyle(color: Colors.grey, fontSize: 10.0),
                       ),
                       style: TextStyle(fontSize: 14.0),
                     ),
@@ -97,7 +99,7 @@ class RegistrationScreen extends StatelessWidget {
                         labelText: "Password",
                         labelStyle: TextStyle(fontSize: 14.0),
                         hintStyle:
-                            TextStyle(color: Colors.grey, fontSize: 10.0),
+                        TextStyle(color: Colors.grey, fontSize: 10.0),
                       ),
                       style: TextStyle(fontSize: 14.0),
                     ),
@@ -154,14 +156,23 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
+  // user registration method
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   void registerNewUser(BuildContext context) async {
+    showDialog(context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return ProgressDialog(message: "Registration Process.....");
+        }
+    );
     final User? user = (await _firebaseAuth
-            .createUserWithEmailAndPassword(
-                email: emailtec.text, password: passowrdtec.text)
-            .catchError((errMSG) {
-      displayToastMessage("Error: $errMSG" , context);
+        .createUserWithEmailAndPassword(
+        email: emailtec.text, password: passowrdtec.text)
+        .catchError((errMSG) {
+      Navigator.pop(context);
+
+      displayToastMessage("Error: $errMSG", context);
     }))
         .user;
 
@@ -178,11 +189,13 @@ class RegistrationScreen extends StatelessWidget {
       Navigator.pushNamedAndRemoveUntil(
           context, LoginScreen.login, (route) => false);
     } else {
+      Navigator.pop(context);
+
       displayToastMessage("No user a ccount has not been created", context);
     }
   }
 }
-
+// to display the popup messages
 displayToastMessage(String message, BuildContext context) {
   Fluttertoast.showToast(msg: message);
 }
