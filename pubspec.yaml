@@ -42,6 +42,12 @@ dependencies:
   firebase_core_platform_interface: ^4.5.0
   google_maps_flutter: ^2.2.5
   google_maps_flutter_web: ^0.4.0+8
+  geolocator: ^9.0.2
+  permission_handler: ^8.2.2
+  http: ^0.13.5
+  provider: ^6.0.5
+
+
 
 
 dev_dependencies:
@@ -87,3 +93,7 @@ flutter:
     - family: Pacifico
       fonts:
         - asset: fonts/Pacifico-Regular.ttf
+
+    - family: Brand-Bold
+      fonts:
+        - asset: fonts/Branding-Medium.otf

@@ -1,10 +1,12 @@
 import 'package:elaf/AllScreen/LoginScreen.dart';
 import 'package:elaf/AllScreen/MainScreen.dart';
 import 'package:elaf/AllScreen/RegistrationScreen.dart';
+import 'package:elaf/DataHandler/AppData.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,30 +26,33 @@ void main() async {
       options: options);
 
 
-  runApp(const MyApp());
+  runApp( MyApp());
 }
 
 DatabaseReference userRef = FirebaseDatabase.instance.ref().child("users");
 
 class MyApp extends StatelessWidget {
 
-  const MyApp({super.key});
+  // const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'هههههه ئاکار',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return ChangeNotifierProvider(
+      create: (context)=> AppData(),
+      child: MaterialApp(
+        title: 'هههههه ئاکار',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        initialRoute: MainScreen.main,
+        routes: {
+          RegistrationScreen.register: (context) => RegistrationScreen(),
+          LoginScreen.login: (context) => LoginScreen(),
+          MainScreen.main: (context) =>  MainScreen(),
+        },
+        debugShowCheckedModeBanner: false,
       ),
-      initialRoute: LoginScreen.login,
-      routes: {
-        RegistrationScreen.register: (context) => RegistrationScreen(),
-        LoginScreen.login: (context) => LoginScreen(),
-        MainScreen.main: (context) =>  MainScreen(),
-      },
-      debugShowCheckedModeBanner: false,
     );
   }
 }
