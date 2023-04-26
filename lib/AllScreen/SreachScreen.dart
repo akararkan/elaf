@@ -1,16 +1,26 @@
 import 'dart:math';
 
+import 'package:elaf/AllWidgets/Divider.dart';
 import 'package:elaf/Assistants/RequestAssistants.dart';
 import 'package:elaf/DataHandler/AppData.dart';
+import 'package:elaf/Models/PlacePredictions.dart';
 import 'package:elaf/configMaps.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class SearchScreen extends StatelessWidget {
+class SearchScreen extends StatefulWidget {
   SearchScreen({Key? key}) : super(key: key);
 
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
   TextEditingController pickTxtEditor = TextEditingController();
+
   TextEditingController dropTxtEditor = TextEditingController();
+
+  List<PlacePredictions> predictionList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +125,7 @@ class SearchScreen extends StatelessWidget {
                           child: Padding(
                             padding: EdgeInsets.all(3.0),
                             child: TextField(
-                              onChanged: (val){
+                              onChanged: (val) {
                                 findPlace(val);
                               },
                               controller: dropTxtEditor,
@@ -137,7 +147,28 @@ class SearchScreen extends StatelessWidget {
                 ],
               ),
             ),
-          )
+          ),
+
+          SizedBox(width: 10,),
+          // prediction tile
+          (predictionList.length > 0)
+              ? Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListView.separated(
+                    padding: EdgeInsets.all(0),
+                    itemBuilder: (context, index) {
+                      return PredictionTile(
+                        placePredictions: predictionList[index],
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        DividerWidget(),
+                    itemCount: predictionList.length,
+                    shrinkWrap: true,
+                    physics: ClampingScrollPhysics(),
+                  ),
+                )
+              : Container(),
         ],
       ),
     );
@@ -150,12 +181,73 @@ class SearchScreen extends StatelessWidget {
 
       var res = await RequestAssistants.getRequest(autoCompleteUrl);
 
-      if(res == "failed"){
+      if (res == "failed") {
         return;
       }
       print(res);
-      print("places predictions response ::----------------------------------------------------------------------");
+      print(
+          "places predictions response ::----------------------------------------------------------------------");
 
+      if (res["status"] == "OK") {
+        var predictions = res["predictions"];
+        var placeList = (predictions as List)
+            .map((e) => PlacePredictions.fromJson(e))
+            .toList();
+
+        setState(() {
+          predictionList = placeList;
+        });
+      }
     }
+  }
+}
+
+class PredictionTile extends StatelessWidget {
+  PredictionTile({Key? key, required this.placePredictions}) : super(key: key);
+
+  final PlacePredictions placePredictions;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        children: [
+          SizedBox(width: 14),
+          Row(
+            children: [
+              Icon(Icons.add_location),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 9,),
+                    Text(
+                      placePredictions.main_text,
+                      style: TextStyle(
+                          fontSize: 16, overflow: TextOverflow.ellipsis),
+                    ),
+                    SizedBox(
+                      height: 2,
+                    ),
+                    Text(
+                      placePredictions.secondary_text,
+                      style: TextStyle(
+                          overflow: TextOverflow.ellipsis,
+                          fontSize: 13,
+                          color: Colors.grey),
+                    ),
+                    SizedBox(height: 9,),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            width: 10,
+          ),
+        ],
+      ),
+    );
   }
 }

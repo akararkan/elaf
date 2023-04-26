@@ -1,9 +1,11 @@
 class Address {
-  late String placeFormattedAddress;
-  late String placeName ="";
-  late String placeID;
-  late double latitude;
-  late double longitude;
+  String placeFormattedAddress = "";
+  String placeName = "";
+  String placeID = "";
+  double latitude = 0;
+  double longitude = 0;
 
-  // Address(this.placeFormattedAddress, this.placeName, this.placeID,this.latitude, this.longitude);
+  Address.withAllFields(this.placeFormattedAddress, this.placeName, this.placeID,this.latitude, this.longitude);
+
+  Address();
 }
