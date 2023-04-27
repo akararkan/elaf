@@ -1,8 +1,10 @@
 import 'dart:math';
 
 import 'package:elaf/AllWidgets/Divider.dart';
+import 'package:elaf/AllWidgets/ProgressDialog.dart';
 import 'package:elaf/Assistants/RequestAssistants.dart';
 import 'package:elaf/DataHandler/AppData.dart';
+import 'package:elaf/Models/Address.dart';
 import 'package:elaf/Models/PlacePredictions.dart';
 import 'package:elaf/configMaps.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +151,9 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
 
-          SizedBox(width: 10,),
+          SizedBox(
+            width: 10,
+          ),
           // prediction tile
           (predictionList.length > 0)
               ? Padding(
@@ -177,8 +181,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void findPlace(String placeName) async {
     if (placeName.length > 1) {
       String autoCompleteUrl =
-          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$placeName&key=$mapKey&sessiontoken=1234567890&components=country:pk";
-
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$placeName&key=$mapKey&sessiontoken=1234567890&components=country:iq";
       var res = await RequestAssistants.getRequest(autoCompleteUrl);
 
       if (res == "failed") {
@@ -209,45 +212,87 @@ class PredictionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: [
-          SizedBox(width: 14),
-          Row(
-            children: [
-              Icon(Icons.add_location),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 9,),
-                    Text(
-                      placePredictions.main_text,
-                      style: TextStyle(
-                          fontSize: 16, overflow: TextOverflow.ellipsis),
-                    ),
-                    SizedBox(
-                      height: 2,
-                    ),
-                    Text(
-                      placePredictions.secondary_text,
-                      style: TextStyle(
-                          overflow: TextOverflow.ellipsis,
-                          fontSize: 13,
-                          color: Colors.grey),
-                    ),
-                    SizedBox(height: 9,),
-                  ],
+    return TextButton(
+      onPressed: () {
+        getPlaceAddress(placePredictions.place_id, context);
+      },
+      child: Container(
+        child: Column(
+          children: [
+            SizedBox(width: 14),
+            Row(
+              children: [
+                Icon(Icons.add_location),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 9,
+                      ),
+                      Text(
+                        placePredictions.main_text,
+                        style: TextStyle(
+                            fontSize: 16, overflow: TextOverflow.ellipsis),
+                      ),
+                      SizedBox(
+                        height: 2,
+                      ),
+                      Text(
+                        placePredictions.secondary_text,
+                        style: TextStyle(
+                            overflow: TextOverflow.ellipsis,
+                            fontSize: 13,
+                            color: Colors.grey),
+                      ),
+                      SizedBox(
+                        height: 9,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(
-            width: 10,
-          ),
-        ],
+              ],
+            ),
+            SizedBox(
+              width: 10,
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void getPlaceAddress(String placeID, context) async {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) =>
+            ProgressDialog(message: "Setting Drop off , Please wait ..."));
+
+    String placeDetails =
+        "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeID&key=$mapKey";
+    var res = await RequestAssistants.getRequest(placeDetails);
+
+    Navigator.pop(context);
+
+    if (res == "failed") {
+      return;
+    }
+
+    if (res["status"] == "OK") {
+      Address address = Address();
+      address.placeName = res["result"]["name"];
+      address.placeID = placeID;
+      address.latitude = res["result"]["geometry"]["location"]["lat"];
+      address.longitude = res["result"]["geometry"]["location"]["lng"];
+
+      Provider.of<AppData>(context, listen: false)
+          .updateDropOffLocationAddress(address);
+      print(
+          "------------------------------------------////////////////////////////////////////**************");
+      print("this is drop off location::::  " + address.placeName);
+
+      Navigator.pop(context, "ObtainDirection");
+    }
   }
 }

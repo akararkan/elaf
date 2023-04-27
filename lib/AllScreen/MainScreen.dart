@@ -10,6 +10,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
+import '../AllWidgets/ProgressDialog.dart';
+
 class MainScreen extends StatefulWidget {
   static const String main = "main";
 
@@ -25,10 +27,14 @@ class _MainScreenState extends State<MainScreen> {
   late GoogleMapController newGoogleMapController;
 
   static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.427, -122.085), // set the latitude and longitude of Iraq
+    target: LatLng(36.1922, 44.0109), // set the latitude and longitude of Iraq
     zoom: 14.4746,
   );
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+  List<LatLng> pLineCoordinate = [];
+  Set<Polyline> polylineSet = {};
+
   late Position currentPosition;
   var geoLocator = Geolocator();
   double bottomPaddingOfMap = 0;
@@ -226,10 +232,15 @@ class _MainScreenState extends State<MainScreen> {
                     SizedBox(
                       height: 20,
                     ),
-
                     GestureDetector(
-                      onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=> SearchScreen()));
+                      onTap: () async {
+                        var res = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SearchScreen()));
+                        if (res == "ObtainDirection") {
+                          await getPLaceDirection();
+                        }
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -326,5 +337,27 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> getPLaceDirection() async {
+    var iPos = Provider.of<AppData>(context, listen: false).pickUpLocation;
+    var fPos = Provider.of<AppData>(context, listen: false).dropOffLocation;
+
+    var pickUpLatLng = LatLng(iPos.latitude, iPos.longitude);
+    var dropOffLatLng = LatLng(fPos.latitude, fPos.longitude);
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) =>
+            ProgressDialog(message: " Please wait ..."));
+
+    var details = await AssistantsMethods.getPlaceDirectionDetails(
+        pickUpLatLng, dropOffLatLng);
+
+    Navigator.pop(context);
+
+    print(
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    print(details?.encodedPoints);
   }
 }
