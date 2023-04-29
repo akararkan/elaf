@@ -2,6 +2,7 @@ import 'package:elaf/AllScreen/LoginScreen.dart';
 import 'package:elaf/AllScreen/MainScreen.dart';
 import 'package:elaf/AllScreen/RegistrationScreen.dart';
 import 'package:elaf/DataHandler/AppData.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -18,38 +19,35 @@ void main() async {
     appId: "1:51236179516:android:189a39d3c31d7b8babfd39",
     messagingSenderId: '1:51236179516:android:189a39d3c31d7b8babfd39',
     databaseURL: "https://elaf-9df7c-default-rtdb.firebaseio.com/",
-
   );
 
-  await Firebase.initializeApp(
-      name: "elaf",
-      options: options);
+  await Firebase.initializeApp(name: "elaf", options: options);
 
-
-  runApp( MyApp());
+  runApp(MyApp());
 }
 
 DatabaseReference userRef = FirebaseDatabase.instance.ref().child("users");
 
 class MyApp extends StatelessWidget {
-
   // const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context)=> AppData(),
+      create: (context) => AppData(),
       child: MaterialApp(
-        title: 'هههههه ئاکار',
+        title: "Taxi App",
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: MainScreen.main,
+        initialRoute: FirebaseAuth.instance.currentUser == null
+            ? LoginScreen.login
+            : MainScreen.main,
         routes: {
           RegistrationScreen.register: (context) => RegistrationScreen(),
           LoginScreen.login: (context) => LoginScreen(),
-          MainScreen.main: (context) =>  MainScreen(),
+          MainScreen.main: (context) => MainScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),

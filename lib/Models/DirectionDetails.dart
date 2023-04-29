@@ -1,11 +1,11 @@
 class DirectionDetails {
-  int? distanceValue;
-  int? durationValue;
-  String? distanceText;
+  int distanceValue =0;
+  int durationValue =0;
+  String distanceText ="";
 
   String? durationText;
 
-  String? encodedPoints;
+  String encodedPoints = " ";
 
   DirectionDetails();
 
