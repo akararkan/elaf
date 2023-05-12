@@ -6,13 +6,17 @@ import 'package:elaf/AllScreen/LoginScreen.dart';
 import 'package:elaf/AllScreen/SreachScreen.dart';
 import 'package:elaf/AllWidgets/Divider.dart';
 import 'package:elaf/Assistants/AssistantMethods.dart';
+import 'package:elaf/Assistants/GeoFireAssistants.dart';
 import 'package:elaf/DataHandler/AppData.dart';
+import 'package:elaf/AllScreen/FeedbackDialog.dart';
 import 'package:elaf/Models/DirectionDetails.dart';
+import 'package:elaf/Models/NearbyDrivers.dart';
 import 'package:elaf/configMaps.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -51,14 +55,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   double searchContainerHeight = 300;
 
   bool drawerOpen = true;
-
+  bool nearbyAvailableDriverKeys = false;
+  BitmapDescriptor? nearbyIcon;
   late DatabaseReference rideRequestReference;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    AssistantsMethods.getCurrentOlineUser();
+    AssistantsMethods.getCurrentOnlineUser();
   }
 
   void saveRideRequest() {
@@ -89,7 +94,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     rideRequestReference.set(rideInfoMap);
   }
 
-  void cancelRideRequest(){
+  void cancelRideRequest() {
     rideRequestReference.remove();
   }
 
@@ -109,7 +114,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       drawerOpen = true;
       searchContainerHeight = 300;
       rideDetailsContainerHeight = 0;
-      reqRideContainerHeight =0;
+      reqRideContainerHeight = 0;
       bottomPaddingOfMap = 300;
       polylineSet.clear();
       markersSet.clear();
@@ -167,10 +172,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     print(
         "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@this is your address ::" +
             address);
+    initGeoFireListener();
   }
 
   @override
   Widget build(BuildContext context) {
+    createIconMarker();
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -238,9 +245,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ),
               ),
               GestureDetector(
-                onTap: (){
+                onTap: () {
                   FirebaseAuth.instance.signOut();
-                  Navigator.pushNamedAndRemoveUntil(context, LoginScreen.login, (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, LoginScreen.login, (route) => false);
                 },
                 child: ListTile(
                   leading: Icon(Icons.signpost_outlined),
@@ -515,7 +523,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                   Text(
                                     ((tripDirectionDetails != null)
                                         ? tripDirectionDetails.distanceText
-                                        : ''),
+                                        : 'somewhat KM'),
                                     style: TextStyle(
                                         fontSize: 18, color: Colors.grey),
                                   ),
@@ -528,7 +536,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                     child: Text(
                                       (tripDirectionDetails != null)
                                           ? '\IQD${AssistantsMethods.calculateFares(tripDirectionDetails)}'
-                                          : ' ',
+                                          : 'somewhat IQD',
                                       style: TextStyle(
                                         fontSize: 16,
                                       ),
@@ -580,6 +588,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                           onPressed: () {
                             displayRequestRideContainer();
                             print("taxi requested");
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text('Send Feedback'),
+                                  content: FeedbackDialog(riderID: firebaseUser?.uid),
+                                );
+                              },
+                            );
+
                           },
                           child: Padding(
                             padding: EdgeInsets.all(17),
@@ -671,7 +689,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       height: 22,
                     ),
                     GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         cancelRideRequest();
                         resetApp();
                       },
@@ -682,7 +700,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(26),
                             border:
-                            Border.all(width: 2, color: Colors.grey[300]!)),
+                                Border.all(width: 2, color: Colors.grey[300]!)),
                         child: Icon(
                           Icons.close,
                           size: 29,
@@ -722,9 +740,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     var dropOffLatLng = LatLng(fPos.latitude, fPos.longitude);
 
     showDialog(
-        context: context,
-        builder: (BuildContext context) =>
-            ProgressDialog(message: " Please wait ..."));
+      context: context,
+      builder: (BuildContext context) =>
+          ProgressDialog(message: " Please wait ..."),
+    );
 
     var details = await AssistantsMethods.getPlaceDirectionDetails(
         pickUpLatLng, dropOffLatLng);
@@ -818,6 +837,87 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       circlesSet.add(pickCircle);
       circlesSet.add(dropOffCircle);
     });
+  }
+
+  void updateAvailableDriversOnMap() {
+    setState(() {
+      markersSet.clear();
+    });
+    Set<Marker> tMarkers = <Marker>{};
+    for (NearbyDrivers drivers in GeoFireAssistants.nearbyDriversList) {
+      LatLng driverAvailablePosition =
+          LatLng(drivers.latitude, drivers.longitude);
+      Marker marker = Marker(
+          markerId: MarkerId('drivers${drivers.key}'),
+          position: driverAvailablePosition,
+          icon: nearbyIcon!,
+          rotation: AssistantsMethods.createRandomNumber(360));
+      tMarkers.add(marker);
+    }
+    setState(() {
+      markersSet = tMarkers;
+    });
+  }
+
+  void initGeoFireListener() {
+    Geofire.initialize("availableDriver");
+
+    double latitude = 36.1922;
+    double longitude = 44.0109;
+    double radius = 15.0;
+
+    Geofire.queryAtLocation(latitude, longitude, radius)?.listen((map) {
+      print('GeoFire query result: $map');
+      if (map != null) {
+        var callBack = map['callBack'];
+
+        switch (callBack) {
+          case Geofire.onKeyEntered:
+            NearbyDrivers nearbyDrivers = NearbyDrivers();
+            nearbyDrivers.key = map['key'];
+            nearbyDrivers.latitude = map['latitude'];
+            nearbyDrivers.longitude = map['longitude'];
+            GeoFireAssistants.nearbyDriversList.add(nearbyDrivers);
+            if (nearbyAvailableDriverKeys == true) {
+              updateAvailableDriversOnMap();
+            }
+            break;
+
+          case Geofire.onKeyExited:
+            GeoFireAssistants.removeDriverFromList(map['key']);
+            updateAvailableDriversOnMap();
+            break;
+
+          case Geofire.onKeyMoved:
+            NearbyDrivers nearbyDrivers =
+                NearbyDrivers(latitude: 36.1922, longitude: 44.0109, key: '');
+            nearbyDrivers.key = map['key'];
+            nearbyDrivers.latitude = map['latitude'];
+            nearbyDrivers.longitude = map['longitude'];
+            GeoFireAssistants.updateDriverNearbyLocation(nearbyDrivers);
+            updateAvailableDriversOnMap();
+            break;
+
+          case Geofire.onGeoQueryReady:
+            updateAvailableDriversOnMap();
+            break;
+        }
+      }
+
+      print('Nearby drivers list: ${GeoFireAssistants.nearbyDriversList}');
+      setState(() {});
+    });
+  }
+
+  void createIconMarker() {
+    if (nearbyIcon == null) {
+      ImageConfiguration imageConfiguration =
+          createLocalImageConfiguration(context, size: const Size(1, 1));
+      BitmapDescriptor.fromAssetImage(imageConfiguration, "images/t.png")
+          .then((value) {
+        nearbyIcon = value;
+      });
+    }
   }
 }
 

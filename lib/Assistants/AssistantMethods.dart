@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:elaf/Assistants/RequestAssistants.dart';
 import 'package:elaf/DataHandler/AppData.dart';
@@ -19,7 +20,7 @@ class AssistantsMethods {
     String placeAddress = "";
     String st1, st2, st3, st4;
     String url =
-        // "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$mapKey";
+        // "https://maps.googleapis.com/maps/api/geocode/json?latlng=$position.latitude,$position.longitude&key=$mapKey";
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=36.1892142,44.0088699&key=$mapKey";
 
     var response = await RequestAssistants.getRequest(url);
@@ -77,7 +78,7 @@ class AssistantsMethods {
   }
 
 
-  static void getCurrentOlineUser() async {
+  static void getCurrentOnlineUser() async {
     firebaseUser = await FirebaseAuth.instance.currentUser;
     String? userID = firebaseUser?.uid;
     DatabaseReference reference = FirebaseDatabase.instance.ref().child("users").child(userID!);
@@ -85,11 +86,18 @@ class AssistantsMethods {
       if(snapshot.value != null){
         userCurrentInfo = Users.fromSnapshot(snapshot);
       }
-    } as FutureOr Function(DatabaseEvent value)
-
-    );
+    } as FutureOr Function(DatabaseEvent value)).catchError((error) {
+      print("Error: $error");
+    });
   }
 
+
+  static double createRandomNumber(int num){
+    var random = Random();
+    int radNum = random.nextInt(num);
+    return radNum.toDouble();
+    
+  }
 
 
 

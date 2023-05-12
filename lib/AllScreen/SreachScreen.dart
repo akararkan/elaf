@@ -111,7 +111,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   Row(
                     children: [
                       Image.asset(
-                        "images/dest.png",
+                        "images/posimarker.png",
                         height: 20,
                         width: 20,
                       ),
@@ -219,7 +219,7 @@ class PredictionTile extends StatelessWidget {
       child: Container(
         child: Column(
           children: [
-            SizedBox(width: 14),
+            SizedBox(width: 10),
             Row(
               children: [
                 Icon(Icons.add_location),
@@ -267,7 +267,7 @@ class PredictionTile extends StatelessWidget {
     showDialog(
         context: context,
         builder: (BuildContext context) =>
-            ProgressDialog(message: "Setting Drop off , Please wait ..."));
+            ProgressDialog(message: "Setting Drop off..."));
 
     String placeDetails =
         "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeID&key=$mapKey";
