@@ -258,6 +258,28 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Send Feedback'),
+                        content: FeedbackDialog(
+                            riderID: firebaseUser?.uid),
+                      );
+                    },
+                  );
+
+                },
+                child: ListTile(
+                  leading: Icon(Icons.feedback),
+                  title: Text(
+                    "FeedBack",
+                    style: TextStyle(fontSize: 15),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -593,11 +615,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: Text('Send Feedback'),
-                                  content: FeedbackDialog(riderID: firebaseUser?.uid),
+                                  content: FeedbackDialog(
+                                      riderID: firebaseUser?.uid),
                                 );
                               },
                             );
-
                           },
                           child: Padding(
                             padding: EdgeInsets.all(17),
